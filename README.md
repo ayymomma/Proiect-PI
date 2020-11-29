@@ -1,2 +1,2 @@
 # Proiect-PI
-Detectarea persoanelor/miscarii folosing camerele de supraveghere
+Detectarea miscarii folosing camerele de supraveghere
