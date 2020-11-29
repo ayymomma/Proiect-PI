@@ -1,0 +1,4 @@
+﻿  Source.cpp
+MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol _main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
+C:\opencv\build\x64\vc15\lib\opencv_world450.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+C:\Users\Pc\Desktop\An 3 facultate\PIP\Proiect PI\Debug\Proiect PI.exe : fatal error LNK1120: 1 unresolved externals
