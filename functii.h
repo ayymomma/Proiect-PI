@@ -11,6 +11,9 @@
 using namespace cv;
 using namespace std;
 
+Scalar color = Scalar(0, 0, 255);
+
+
 
 double* makeFilter(int size) {
     double* filter = new double[size * size];
@@ -45,6 +48,7 @@ Mat Filtru(Mat frame, int size)
                 result.at<uchar>(x, y) = (unsigned char)sum;
 
         }
+
     return result;
 }
 
@@ -63,15 +67,22 @@ Mat Difference(Mat frame, Mat background, int th) {
 
     rez = ScadereMatAbs(frame, background);
 
+    imshow("Diferenta absoluta", rez);
+
     for (int y = 0; y < rez.cols; y++)
         for (int x = 0; x < rez.rows; x++)
             if (rez.at<uchar>(x, y) > th)
                 rez.at<uchar>(x, y) = 255;
             else
                 rez.at<uchar>(x, y) = 0;
+
 
     rez = Filtru(rez, 5);
-    // blur(rez, rez, Size(3, 3));
+   // imshow("Diferenta dupa filtru", rez);
+    
+    morphologyEx(rez, rez, MORPH_CLOSE, cv::getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+
+   // imshow("Diferenta dupa inchidere", rez);
 
     for (int y = 0; y < rez.cols; y++)
         for (int x = 0; x < rez.rows; x++)
@@ -79,6 +90,10 @@ Mat Difference(Mat frame, Mat background, int th) {
                 rez.at<uchar>(x, y) = 255;
             else
                 rez.at<uchar>(x, y) = 0;
+
+   // imshow("Diferenta dupa threshold", rez);
+
+    morphologyEx(rez, rez, MORPH_DILATE, cv::getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
 
     return rez;
 }
@@ -94,32 +109,54 @@ int countDifferences(Mat frame) {
     return sum;
 }
 
-Mat backGroundUpdate(Mat frame, Mat back, int pond) {
-    Mat rez(frame.rows, frame.cols, CV_8UC1);
-    for (int x = 0; x < frame.rows; x++)
-        for (int y = 0; y < frame.cols; y++)
-            rez.at<uchar>(x, y) = (pond)*frame.at<uchar>(x, y) + (1 - pond) * back.at<uchar>(x, y);
-    return rez;
+
+void drawMotion(Mat& frame, Mat difference, int sens) {
+
+
+    vector<vector<Point> > contours;
+
+    findContours(difference, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);// detecteaza conturul 
+
+    if (contours.size() == 0) return;
+
+    vector<Rect> vrects(contours.size());
+    int nr_rect = 1;
+    Rect rect = boundingRect(contours[0]);
+    vrects[0] = rect;
+
+    for (int i = 1; i < contours.size(); i++)
+    {
+        bool intersect = false;
+        rect = boundingRect(contours[i]);
+        for (int i = 0; i < nr_rect; ++i)
+        {
+            if (vrects[i].contains(rect.tl()) && vrects[i].contains(rect.br())) {
+                intersect = true;
+                break;
+            }
+            else if (rect.contains(vrects[i].tl()) && rect.contains(vrects[i].br())) {
+                vrects[i] = rect;
+                intersect = true;
+                break;
+            }
+        }
+        if (!intersect) {
+            vrects[nr_rect] = rect;
+            nr_rect++;
+        }
+    }
+
+    for (size_t i = 0; i < contours.size(); i++)
+    {
+        if (sqrt(
+            (((float)vrects[i].br().x - (float)vrects[i].tl().x) *
+                ((float)vrects[i].br().x - (float)vrects[i].tl().x)) +
+            (((float)vrects[i].br().y - (float)vrects[i].tl().y) *
+                ((float)vrects[i].br().y - (float)vrects[i].tl().y))
+        ) > sens)
+            rectangle(frame, vrects[i].tl(), vrects[i].br(), color, 2);
+    }
+
+
+
 }
-
-
-//Mat DetectDrawRect(Mat frame, Mat difference) {
-//    
-//    int sum;
-//    int xAxis[10], yAxis[10];
-//    int xContor = 0, yContor = 0;
-//    bool begin = false;
-//    for (int x = 0; x < difference.rows; x++)
-//        for (int y = 0; y < difference.cols; y++)
-//        {
-//            if (frame.at<uchar>(x, y) != 0 && begin == false) {
-//                xAxis[xContor++] = x;
-//                begin = true;
-//                break;
-//            }
-//            else {
-//
-//            }
-//        }
-//
-//}
